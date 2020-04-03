@@ -41,7 +41,7 @@
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
-!define SETTINGS_KEY "Software\SHARPMAP"
+!define SETTINGS_KEY "Software\rtlsdr-scanner"
 !define SETTINGS_INSTDIR "InstDir"
 !define SETTINGS_INSTVER "InstVer"
 
@@ -143,7 +143,7 @@ Section -Install
     CopyFiles "$ExePath" "$InstDir\"
     CreateDirectory "$SMPROGRAMS\SHARPMAP"
     CreateShortCut "$SMPROGRAMS\SHARPMAP\Setup.lnk" "$INSTDIR\$EXEFILE"
-    
+
     ${If} ${IsWinXP}
         StrCpy $UriFile "pyserial==2.7"
         Call install_pip
@@ -153,7 +153,7 @@ SectionEnd
 Section -AdditionalIcons
 	SetOutPath "$INSTDIR"
 	WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
-	
+
 	CreateShortCut "$SMPROGRAMS\SHARPMAP\Website.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
 	CreateShortCut "$SMPROGRAMS\SHARPMAP\Uninstall.lnk" "$INSTDIR\uninst.exe"
 	CreateShortCut "$SMPROGRAMS\SHARPMAP\Manual.lnk" "$INSTDIR\Manual.pdf"
@@ -174,7 +174,7 @@ SectionEnd
 
 Section Uninstall
 	!insertmacro APP_UNASSOCIATE "${FILE_TYPE}" "${FILE_CLASS}"
-    
+
     StrCpy $UriFile "rtlsdr-scanner"
     Call un.install_pip
 
@@ -193,14 +193,14 @@ Section Uninstall
 	Delete "$SMPROGRAMS\SHARPMAP\Website.lnk"
 	Delete "$SMPROGRAMS\SHARPMAP\Setup.lnk"
 	Delete "$SMPROGRAMS\SHARPMAP\SHARPMAP.lnk"
-    Delete "$SMPROGRAMS\SHARPMAP\SHARPMAP.lnk"
+    Delete "$SMPROGRAMS\SHARPMAP\SHARPMAP Example.lnk"
 
 	RMDir "$SMPROGRAMS\SHARPMAP"
 
 	DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
-    
+
     ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR"
-    
+
 	SetAutoClose true
 SectionEnd
 
@@ -216,7 +216,7 @@ SectionEnd
 Function .onInit
     ReadRegStr $0 HKCU "${SETTINGS_KEY}" "${SETTINGS_INSTDIR}"
     ReadRegDWORD $1 HKCU "${SETTINGS_KEY}" "${SETTINGS_INSTVER}"
-    ${IfNot} $0 == ""    
+    ${IfNot} $0 == ""
     ${AndIf} $1 == ""
         MessageBox MB_ICONEXCLAMATION|MB_OKCANCEL "The previous version needs to be uninstalled first.$\r$\nCancelling this will exit the installer." IDOK ok IDCANCEL cancel
         cancel:
@@ -300,7 +300,7 @@ Function page_type_end
     IntOp $0 ${SF_SELECTED} | ${SF_RO}
     IntOp $0 $0 | ${SF_BOLD}
     SectionSetFlags ${SEC_SCAN} $0
-    
+
     Call has_python
     ${If} $0 == ""
         IntOp $0 ${SF_SELECTED} | ${SF_RO}
