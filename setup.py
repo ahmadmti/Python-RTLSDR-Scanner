@@ -28,7 +28,7 @@ from setuptools import setup, find_packages
 from rtlsdr_scanner.version import VERSION
 
 
-setup(name='rtlsdr_scanner',
+setup(name='SHARPMAP',
       version='.'.join([str(x) for x in VERSION]),
       description='A simple spectrum analyser for scanning\n with a RTL-SDR compatible USB device',
       classifiers=['Development Status :: 4 - Beta',
