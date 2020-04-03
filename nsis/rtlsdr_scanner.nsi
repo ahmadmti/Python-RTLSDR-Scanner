@@ -35,13 +35,13 @@
 
 !define INSTALLER_VERSION "24"
 
-!define PRODUCT_NAME "RTLSDR Scanner"
+!define PRODUCT_NAME "SHARPMAP"
 !define PRODUCT_PUBLISHER "Ear to Ear Oak"
 !define PRODUCT_WEB_SITE "https://eartoearoak.com/software/rtlsdr-scanner"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
-!define SETTINGS_KEY "Software\rtlsdr-scanner"
+!define SETTINGS_KEY "Software\SHARPMAP"
 !define SETTINGS_INSTDIR "InstDir"
 !define SETTINGS_INSTVER "InstVer"
 
@@ -71,7 +71,7 @@ Page custom page_error page_error_end
 !define UPDATE_FOUND '"An updated installer is available at: $\r$\n$\r$\n\
 https://github.com/EarToEarOak/RTLSDR-Scanner/releases $\r$\n$\r$\n\
 Updating is highly recommended"'
-!define INFO '"This will install RTLSDR Scanner and its dependencies $\r$\n$\r$\n\
+!define INFO '"This will install SHARPMAP and its dependencies $\r$\n$\r$\n\
 You can update to the latest versions of RTLSDR-Scanner, $\r$\n\
 the rtlsdr driver and dependencies by running this installer again"'
 
@@ -82,7 +82,7 @@ the rtlsdr driver and dependencies by running this installer again"'
 Name "${PRODUCT_NAME}"
 OutFile "rtlsdr_scanner-setup-win32.exe"
 RequestExecutionLevel admin
-InstallDir "$PROGRAMFILES\RTLSDR Scanner"
+InstallDir "$PROGRAMFILES\SHARPMAP"
 ShowInstDetails show
 ShowUnInstDetails show
 
@@ -105,7 +105,7 @@ Var UriFile
 Var Switches
 
 
-Section "RTLSDR Scanner (Required)" SEC_SCAN
+Section "SHARPMAP (Required)" SEC_SCAN
 SectionEnd
 
 SectionGroup "/e" "Dependencies" SEC_DEP
@@ -141,8 +141,8 @@ Section -Install
     File "license.txt"
     Call install_rtlsdr_scanner
     CopyFiles "$ExePath" "$InstDir\"
-    CreateDirectory "$SMPROGRAMS\RTLSDR Scanner"
-    CreateShortCut "$SMPROGRAMS\RTLSDR Scanner\Setup.lnk" "$INSTDIR\$EXEFILE"
+    CreateDirectory "$SMPROGRAMS\SHARPMAP"
+    CreateShortCut "$SMPROGRAMS\SHARPMAP\Setup.lnk" "$INSTDIR\$EXEFILE"
     
     ${If} ${IsWinXP}
         StrCpy $UriFile "pyserial==2.7"
@@ -154,10 +154,10 @@ Section -AdditionalIcons
 	SetOutPath "$INSTDIR"
 	WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
 	
-	CreateShortCut "$SMPROGRAMS\RTLSDR Scanner\Website.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
-	CreateShortCut "$SMPROGRAMS\RTLSDR Scanner\Uninstall.lnk" "$INSTDIR\uninst.exe"
-	CreateShortCut "$SMPROGRAMS\RTLSDR Scanner\Manual.lnk" "$INSTDIR\Manual.pdf"
-	CreateShortCut "$SMPROGRAMS\RTLSDR Scanner\Example.lnk" "$INSTDIR\BBCR2.rfs"
+	CreateShortCut "$SMPROGRAMS\SHARPMAP\Website.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
+	CreateShortCut "$SMPROGRAMS\SHARPMAP\Uninstall.lnk" "$INSTDIR\uninst.exe"
+	CreateShortCut "$SMPROGRAMS\SHARPMAP\Manual.lnk" "$INSTDIR\Manual.pdf"
+	CreateShortCut "$SMPROGRAMS\SHARPMAP\Example.lnk" "$INSTDIR\BBCR2.rfs"
 SectionEnd
 
 Section -Post
@@ -189,13 +189,13 @@ Section Uninstall
 
 	DeleteRegKey HKCU "${SETTINGS_KEY}/${SETTINGS_INSTDIR}"
 
-	Delete "$SMPROGRAMS\RTLSDR Scanner\Uninstall.lnk"
-	Delete "$SMPROGRAMS\RTLSDR Scanner\Website.lnk"
-	Delete "$SMPROGRAMS\RTLSDR Scanner\Setup.lnk"
-	Delete "$SMPROGRAMS\RTLSDR Scanner\RTLSDR Scanner.lnk"
-    Delete "$SMPROGRAMS\RTLSDR Scanner\RTLSDR Example.lnk"
+	Delete "$SMPROGRAMS\SHARPMAP\Uninstall.lnk"
+	Delete "$SMPROGRAMS\SHARPMAP\Website.lnk"
+	Delete "$SMPROGRAMS\SHARPMAP\Setup.lnk"
+	Delete "$SMPROGRAMS\SHARPMAP\SHARPMAP.lnk"
+    Delete "$SMPROGRAMS\SHARPMAP\SHARPMAP.lnk"
 
-	RMDir "$SMPROGRAMS\RTLSDR Scanner"
+	RMDir "$SMPROGRAMS\SHARPMAP"
 
 	DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
     
@@ -205,7 +205,7 @@ Section Uninstall
 SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-!insertmacro MUI_DESCRIPTION_TEXT ${SEC_SCAN} "RTLSDR Scanner"
+!insertmacro MUI_DESCRIPTION_TEXT ${SEC_SCAN} "SHARPMAP"
 !insertmacro MUI_DESCRIPTION_TEXT ${SEC_RTLSDR} "Latest rtlsdr driver"
 !insertmacro MUI_DESCRIPTION_TEXT ${SEC_MSVC} "Microsoft Visual C++ Redistributable"
 !insertmacro MUI_DESCRIPTION_TEXT ${SEC_DEP} "Dependencies"
@@ -409,10 +409,10 @@ Function install_rtlsdr_scanner
     Call install_pip
     ${IfNot} ${Errors}
         Call get_python_path
-        CreateShortCut "$SMPROGRAMS\RTLSDR Scanner\RTLSDR Scanner.lnk" '"$PythonPath\python.exe"' '-m rtlsdr_scanner' "$INSTDIR\rtlsdr_scan.ico" 0
+        CreateShortCut "$SMPROGRAMS\SHARPMAP\SHARPMAP.lnk" '"$PythonPath\python.exe"' '-m rtlsdr_scanner' "$INSTDIR\rtlsdr_scan.ico" 0
         ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR"
         Call get_python_path
-        !insertmacro APP_ASSOCIATE "${FILE_TYPE}" "${FILE_CLASS}" "${FILE_DESC}" "$INSTDIR\rtlsdr_scan.ico,0" "Open with RTLSDR Scanner" '"$PythonPath\python.exe" -m rtlsdr_scanner "%1"'
+        !insertmacro APP_ASSOCIATE "${FILE_TYPE}" "${FILE_CLASS}" "${FILE_DESC}" "$INSTDIR\rtlsdr_scan.ico,0" "Open with SHARPMAP" '"$PythonPath\python.exe" -m rtlsdr_scanner "%1"'
     ${EndIf}
 FunctionEnd
 

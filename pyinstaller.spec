@@ -45,7 +45,7 @@ def create_version():
 
     strings = []
     strings.append(versioninfo.StringStruct('ProductName',
-                                            'RTLSDR Scanner'))
+                                            'SHARPMAP'))
     strings.append(versioninfo.StringStruct('FileDescription',
                                             'Spectrum Analyser'))
     strings.append(versioninfo.StringStruct('LegalCopyright',
