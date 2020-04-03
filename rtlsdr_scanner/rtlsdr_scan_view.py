@@ -43,7 +43,7 @@ class MainWindow(wx.Frame):
         settings = Settings()
         self.directory = settings.dirScans
 
-        wx.Frame.__init__(self, None, -1, 'RTLSDR Scanner Viewer', size=(800, 600))
+        wx.Frame.__init__(self, None, -1, 'SHARPMAP Viewer', size=(800, 600))
 
         Figure = app.GetFigureClass()
         fig = Figure(self)

@@ -26,7 +26,7 @@
 import numpy
 
 
-APP_NAME = 'RTLSDR Scanner'
+APP_NAME = 'SHARPMAP'
 
 F_MIN = 0
 F_MAX = 9999

@@ -72,14 +72,14 @@ var worker;
 var margins = '0 0 0 5';
 
 Ext.application({
-	name : 'RTLSDR Scanner',
+	name : 'SHARPMAP',
 	launch : function() {
 
 		setupMap();
 		setupLayers();
 
 		var mapPanel = Ext.create('GeoExt.panel.Map', {
-			title : 'RTLSDR Scanner',
+			title : 'SHARPMAP',
 			region : 'center',
 			map : map,
 			layers : layers
@@ -88,7 +88,7 @@ Ext.application({
 		var store = Ext.create('Ext.data.TreeStore', {
 			model : 'GeoExt.data.LayerTreeModel',
 			root : {
-				text : 'RTLSDR Scanner',
+				text : 'SHARPMAP',
 				expanded : true,
 				children : [ {
 					text : "Maps",
