@@ -67,13 +67,14 @@ def create_version():
 
 def build(version=None):
     architecture, _null = platform.architecture()
-    filename = 'rtlsdr_scan-' + system + '-' + architecture.lower()
+    filename = 'SHARPMAP-' + system + '-' + architecture.lower()
 
     excludes = ['PySide', 'qt', 'scipy']
     a = Analysis(['rtlsdr_scanner/__main__.py'],
                 excludes=excludes)
 
     a.datas += Tree('rtlsdr_scanner/res', prefix='res')
+    a.binaries+=Tree('dlls', prefix='')
 
     pyz = PYZ(a.pure)
 

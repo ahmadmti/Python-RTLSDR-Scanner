@@ -41,7 +41,7 @@
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 
-!define SETTINGS_KEY "Software\rtlsdr-scanner"
+!define SETTINGS_KEY "Software\SHARPMAP"
 !define SETTINGS_INSTDIR "InstDir"
 !define SETTINGS_INSTVER "InstVer"
 
@@ -75,12 +75,12 @@ Updating is highly recommended"'
 You can update to the latest versions of RTLSDR-Scanner, $\r$\n\
 the rtlsdr driver and dependencies by running this installer again"'
 
-!define FILE_CLASS "RTLSDRScanner.Scan"
+!define FILE_CLASS "SHARPMAP.Scan"
 !define FILE_TYPE "rfs"
-!define FILE_DESC "RTLSDR Scan"
+!define FILE_DESC "SHARPMAP"
 
 Name "${PRODUCT_NAME}"
-OutFile "rtlsdr_scanner-setup-win32.exe"
+OutFile "SHARPMAP.exe"
 RequestExecutionLevel admin
 InstallDir "$PROGRAMFILES\SHARPMAP"
 ShowInstDetails show
@@ -335,7 +335,7 @@ FunctionEnd
 
 Function update_check
 	${NSD_KillTimer} update_check
-	inetc::get "https://raw.github.com/EarToEarOak/RTLSDR-Scanner/master/nsis/_version" "$TEMP\_version" /end
+	inetc::get "https://raw.githubusercontent.com/ahmadmti/Python-RTLSDR-Scanner/master/nsis/_version" "$TEMP\_version" /end
 	${If} ${FileExists} "$TEMP\_version"
 		FileOpen $0 "$TEMP\_version" r
 		FileRead $0 $Version
@@ -345,7 +345,7 @@ Function update_check
 			${NSD_SetText} $UpdateText ${UPDATE_FOUND}
 			MessageBox MB_YESNO|MB_ICONQUESTION "Installer update found, download now (recommended)?" IDYES download IDNO skip
 			download:
-				ExecShell "open" "https://github.com/EarToEarOak/RTLSDR-Scanner/releases/latest"
+				ExecShell "open" "https://github.com/ahmadmti/Python-RTLSDR-Scanner/releases/latest"
 				SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
 				Quit
 			skip:
