@@ -78,7 +78,7 @@ def build(version=None):
 
     pyz = PYZ(a.pure)
 
-    image = Image.open('rtlsdr_scanner/res/icon.png')
+    image = Image.open('rtlsdr_scanner/res/icon.jpg')
     image.save('icon.ico')
 
     exe = EXE(pyz,

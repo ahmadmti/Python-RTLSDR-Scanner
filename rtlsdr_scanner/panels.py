@@ -60,7 +60,7 @@ from rtlsdr_scanner.widgets import GridToolTips, CheckBoxCellRenderer
 
 class PanelGraph(wx.Panel):
 
-    def __init__(self, panel, notify, settings, status, remoteControl):
+    def __init__(self, panel, notify, settings, status, remoteControl,is_admin=False):
         self.panel = panel
         self.notify = notify
         self.plot = None
@@ -92,7 +92,7 @@ class PanelGraph(wx.Panel):
         self.show = None
 
         self.doDraw = False
-
+        self.is_admin=is_admin
         wx.Panel.__init__(self, panel)
 
         self.figure = matplotlib.figure.Figure(facecolor='white')

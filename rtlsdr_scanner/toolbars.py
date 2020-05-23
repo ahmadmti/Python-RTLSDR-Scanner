@@ -163,13 +163,14 @@ class Statusbar(wx.StatusBar):
 
 
 class NavigationToolbar(NavigationToolbar2WxAgg):
-    def __init__(self, canvas, panel, settings, callBackHideOverlay):
+    def __init__(self, canvas, panel, settings, callBackHideOverlay,is_admin=False):
         self.panel = panel
         self.settings = settings
         self.callbackHide = callBackHideOverlay
         self.plot = None
         self.extraTools = []
         self.panPos = None
+        self.is_admin=is_admin
 
         NavigationToolbar2WxAgg.__init__(self, canvas)
         if matplotlib.__version__ >= '1.2':

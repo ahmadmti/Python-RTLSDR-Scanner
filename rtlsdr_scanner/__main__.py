@@ -31,6 +31,7 @@ except:
 
 try:
     import matplotlib
+
     matplotlib.interactive(True)
     matplotlib.use('WXAgg')
     import rtlsdr  # @UnusedImport
@@ -53,6 +54,7 @@ from rtlsdr_scanner.main_window import FrameMain, RtlSdrScanner
 if not hasattr(sys, 'frozen'):
     try:
         import visvis as vv
+
         vv.use('wx')
     except ImportError:
         pass
@@ -115,6 +117,14 @@ def __arguments():
     return isGui, (args)
 
 
+switch_version = 0
+
+
+def version_switch(i):
+    global switch_version
+    switch_version = i
+
+
 if __name__ == '__main__':
     print APP_NAME + "\n"
 
@@ -123,10 +133,21 @@ if __name__ == '__main__':
         app = RtlSdrScanner()
         app.SetClassName(APP_NAME)
         wx.Locale().Init2()
-        frame = FrameMain(APP_NAME)
+        frame = FrameMain(APP_NAME, False, version_switch)
         if args.file is not None:
             frame.open(os.path.abspath(args.dirname), args.filename)
         app.MainLoop()
+        del app
+        while switch_version != 0:
+            app = RtlSdrScanner()
+            app.SetClassName(APP_NAME)
+            wx.Locale().Init2()
+            frame = FrameMain(APP_NAME, True if switch_version == 2 else False, version_switch)
+            if args.file is not None:
+                frame.open(os.path.abspath(args.dirname), args.filename)
+            switch_version = 0
+            app.MainLoop()
+            del app
     else:
         try:
             Cli(args)

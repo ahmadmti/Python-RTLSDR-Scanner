@@ -33,7 +33,6 @@ from threading import Thread
 import threading
 import time
 import webbrowser
-import password_dialog
 
 import wx
 from wx.lib.agw import aui
@@ -49,7 +48,7 @@ from rtlsdr_scanner.devices import get_devices_rtl
 from rtlsdr_scanner.dialogs_devices import DialogDevicesRTL, DialogDevicesGPS
 from rtlsdr_scanner.dialogs_file import DialogImageSize, DialogExportSeq, DialogExportGeo, \
     DialogProperties, DialogSaveWarn, DialogRestore
-from rtlsdr_scanner.dialogs_help import DialogSysInfo
+from rtlsdr_scanner.dialogs_help import DialogSysInfo, DialogAbout
 from rtlsdr_scanner.dialogs_prefs import DialogPrefs, DialogAdvPrefs, DialogFormatting
 from rtlsdr_scanner.dialogs_scan import DialogScanDelay
 from rtlsdr_scanner.dialogs_tools import DialogCompare, DialogAutoCal, DialogSats, DialogSmooth, \
@@ -93,15 +92,14 @@ class RtlSdrScanner(wx.App):
 
 
 class FrameMain(wx.Frame):
-    def __init__(self, title,is_admin=False,on_version_change=None):
-        wx.Frame.__init__(self, None, title=title,)
-        self.wrong_attempts=0
+    def __init__(self, title):
+        wx.Frame.__init__(self, None, title=title)
         self.lock = threading.Lock()
-        self.is_admin=is_admin
+
         self.sdr = None
         self.threadScan = None
         self.threadLocation = None
-        self.on_version_change=on_version_change
+
         self.queueScan = Queue.Queue()
 
         self.serverLocation = None
@@ -197,8 +195,8 @@ class FrameMain(wx.Frame):
 
     def __create_toolbars(self):
         self.remoteControl = RemoteControl()
-        if self.is_admin:
-            self.graph = PanelGraph(self, self,
+
+        self.graph = PanelGraph(self, self,
                                 self.settings, self.status,
                                 self.remoteControl)
 
@@ -230,7 +228,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_SPINCTRL, self.__on_spin, self.spinCtrlStop)
 
         textGain = wx.StaticText(self.toolbar1, label="Gain (dB)")
-        if self.is_admin:self.controlGain = wx.Choice(self.toolbar1, choices=[''])
+        self.controlGain = wx.Choice(self.toolbar1, choices=[''])
 
         grid1 = wx.GridBagSizer(5, 5)
         grid1.Add(self.buttonStart, pos=(0, 0), span=(3, 1),
@@ -243,61 +241,59 @@ class FrameMain(wx.Frame):
         grid1.Add(self.spinCtrlStart, pos=(1, 4))
         grid1.Add(textStop, pos=(1, 5), flag=wx.ALIGN_CENTER)
         grid1.Add(self.spinCtrlStop, pos=(1, 6))
-        if self.is_admin:
-            grid1.Add(textGain, pos=(0, 7), flag=wx.ALIGN_CENTER)
-            grid1.Add(self.controlGain, pos=(1, 7), flag=wx.ALIGN_CENTER)
+        grid1.Add(textGain, pos=(0, 7), flag=wx.ALIGN_CENTER)
+        grid1.Add(self.controlGain, pos=(1, 7), flag=wx.ALIGN_CENTER)
         grid1.Add((5, 1), pos=(0, 8))
         grid1.AddGrowableCol(2)
-        if self.is_admin:
-            self.toolbar2 = wx.Window(self)
 
-            textMode = wx.StaticText(self.toolbar2, label="Mode")
-            self.choiceMode = wx.Choice(self.toolbar2, choices=MODE[::2])
-            self.choiceMode.SetToolTipString('Scanning mode')
+        self.toolbar2 = wx.Window(self)
 
-            textDwell = wx.StaticText(self.toolbar2, label="Dwell")
-            self.choiceDwell = wx.Choice(self.toolbar2, choices=get_dwells()[::2])
-            self.choiceDwell.SetToolTipString('Scan time per step')
+        textMode = wx.StaticText(self.toolbar2, label="Mode")
+        self.choiceMode = wx.Choice(self.toolbar2, choices=MODE[::2])
+        self.choiceMode.SetToolTipString('Scanning mode')
 
-            textNfft = wx.StaticText(self.toolbar2, label="FFT size")
-            self.choiceNfft = wx.Choice(self.toolbar2, choices=map(str, NFFT))
-            self.choiceNfft.SetToolTipString('Higher values for greater'
-                                             'precision')
+        textDwell = wx.StaticText(self.toolbar2, label="Dwell")
+        self.choiceDwell = wx.Choice(self.toolbar2, choices=get_dwells()[::2])
+        self.choiceDwell.SetToolTipString('Scan time per step')
 
-            textDisplay = wx.StaticText(self.toolbar2, label="Display")
-            self.choiceDisplay = wx.Choice(self.toolbar2, choices=DISPLAY[::2])
-            self.Bind(wx.EVT_CHOICE, self.__on_choice, self.choiceDisplay)
-            self.choiceDisplay.SetToolTipString('Spectrogram available in'
+        textNfft = wx.StaticText(self.toolbar2, label="FFT size")
+        self.choiceNfft = wx.Choice(self.toolbar2, choices=map(str, NFFT))
+        self.choiceNfft.SetToolTipString('Higher values for greater'
+                                         'precision')
+
+        textDisplay = wx.StaticText(self.toolbar2, label="Display")
+        self.choiceDisplay = wx.Choice(self.toolbar2, choices=DISPLAY[::2])
+        self.Bind(wx.EVT_CHOICE, self.__on_choice, self.choiceDisplay)
+        self.choiceDisplay.SetToolTipString('Spectrogram available in'
                                             'continuous mode')
-            grid2 = wx.GridBagSizer(5, 5)
-            grid2.Add(textMode, pos=(0, 0), flag=wx.ALIGN_CENTER)
-            grid2.Add(self.choiceMode, pos=(1, 0), flag=wx.ALIGN_CENTER)
-            grid2.Add(textDwell, pos=(0, 1), flag=wx.ALIGN_CENTER)
-            grid2.Add(self.choiceDwell, pos=(1, 1), flag=wx.ALIGN_CENTER)
-            grid2.Add(textNfft, pos=(0, 2), flag=wx.ALIGN_CENTER)
-            grid2.Add(self.choiceNfft, pos=(1, 2), flag=wx.ALIGN_CENTER)
-            grid2.Add((20, 1), pos=(0, 3))
-            grid2.Add(textDisplay, pos=(0, 4), flag=wx.ALIGN_CENTER)
-            grid2.Add(self.choiceDisplay, pos=(1, 4), flag=wx.ALIGN_CENTER)
-            grid2.Add((5, 1), pos=(0, 5))
-            grid2.AddGrowableCol(3)
+
+        grid2 = wx.GridBagSizer(5, 5)
+        grid2.Add(textMode, pos=(0, 0), flag=wx.ALIGN_CENTER)
+        grid2.Add(self.choiceMode, pos=(1, 0), flag=wx.ALIGN_CENTER)
+        grid2.Add(textDwell, pos=(0, 1), flag=wx.ALIGN_CENTER)
+        grid2.Add(self.choiceDwell, pos=(1, 1), flag=wx.ALIGN_CENTER)
+        grid2.Add(textNfft, pos=(0, 2), flag=wx.ALIGN_CENTER)
+        grid2.Add(self.choiceNfft, pos=(1, 2), flag=wx.ALIGN_CENTER)
+        grid2.Add((20, 1), pos=(0, 3))
+        grid2.Add(textDisplay, pos=(0, 4), flag=wx.ALIGN_CENTER)
+        grid2.Add(self.choiceDisplay, pos=(1, 4), flag=wx.ALIGN_CENTER)
+        grid2.Add((5, 1), pos=(0, 5))
+        grid2.AddGrowableCol(3)
 
         self.toolbar1.SetSizerAndFit(grid1)
         self.toolbar1.Layout()
         toolSize1 = self.toolbar1.GetMinSize()
-        if self.is_admin:
-            self.toolbar2.SetSizerAndFit(grid2)
-            self.toolbar2.Layout()
-            toolSize2 = self.toolbar2.GetMinSize()
+        self.toolbar2.SetSizerAndFit(grid2)
+        self.toolbar2.Layout()
+        toolSize2 = self.toolbar2.GetMinSize()
 
         self.__set_controls()
         self.__set_gain_control()
 
         self._mgr = aui.AuiManager(self)
-        if self.is_admin:
-            self._mgr.AddPane(self.graph, aui.AuiPaneInfo().
-                            Centre().
-                            CentrePane())
+        self._mgr.AddPane(self.graph, aui.AuiPaneInfo().
+                          Centre().
+                          CentrePane())
         self._mgr.AddPane(self.toolbar1, aui.AuiPaneInfo().
                           ToolbarPane().
                           Bottom().
@@ -311,7 +307,7 @@ class FrameMain(wx.Frame):
                           CloseButton(False).
                           MinimizeButton(True).
                           MinSize(toolSize1))
-        if self.is_admin:self._mgr.AddPane(self.toolbar2, aui.AuiPaneInfo().
+        self._mgr.AddPane(self.toolbar2, aui.AuiPaneInfo().
                           ToolbarPane().
                           Bottom().
                           Layer(2).
@@ -327,63 +323,57 @@ class FrameMain(wx.Frame):
         self._mgr.Update()
 
     def __create_menu(self):
-        self.menuMain = MenuMain(self, self.settings,is_admin=self.is_admin)
-        self.Bind(wx.EVT_MENU, self.__on_export_cont, self.menuMain.exportCont)
+        self.menuMain = MenuMain(self, self.settings)
+
+        self.Bind(wx.EVT_MENU, self.__on_new, self.menuMain.new)
+        self.Bind(wx.EVT_MENU, self.__on_open, self.menuMain.open)
+        self.Bind(wx.EVT_MENU, self.__on_merge, self.menuMain.merge)
+        self.Bind(wx.EVT_MENU, self.__on_backups, self.menuMain.restore)
+        self.Bind(wx.EVT_MENU_RANGE, self.__on_file_history,
+                  id=wx.ID_FILE1, id2=wx.ID_FILE9)
         self.Bind(wx.EVT_MENU, self.__on_save, self.menuMain.save)
+        self.Bind(wx.EVT_MENU, self.__on_export_scan, self.menuMain.exportScan)
+        self.Bind(wx.EVT_MENU, self.__on_export_image, self.menuMain.exportImage)
+        self.Bind(wx.EVT_MENU, self.__on_export_image_seq, self.menuMain.exportSeq)
+        self.Bind(wx.EVT_MENU, self.__on_export_geo, self.menuMain.exportGeo)
+        self.Bind(wx.EVT_MENU, self.__on_export_track, self.menuMain.exportTrack)
+        self.Bind(wx.EVT_MENU, self.__on_export_cont, self.menuMain.exportCont)
+        self.Bind(wx.EVT_MENU, self.__on_page, self.menuMain.page)
+        self.Bind(wx.EVT_MENU, self.__on_preview, self.menuMain.preview)
+        self.Bind(wx.EVT_MENU, self.__on_print, self.menuMain.printer)
+        self.Bind(wx.EVT_MENU, self.__on_properties, self.menuMain.properties)
         self.Bind(wx.EVT_MENU, self.__on_exit, self.menuMain.close)
-        self.Bind(wx.EVT_MENU, self.__on_version_change, self.menuMain.versionSwitch)
-
-
-        if self.is_admin:
-            self.Bind(wx.EVT_MENU, self.__on_password_change, self.menuMain.changePassword)
-            self.Bind(wx.EVT_MENU, self.__on_new, self.menuMain.new)
-            self.Bind(wx.EVT_MENU, self.__on_open, self.menuMain.open)
-            self.Bind(wx.EVT_MENU, self.__on_merge, self.menuMain.merge)
-            self.Bind(wx.EVT_MENU, self.__on_backups, self.menuMain.restore)
-            self.Bind(wx.EVT_MENU_RANGE, self.__on_file_history,
-                      id=wx.ID_FILE1, id2=wx.ID_FILE9)
-            self.Bind(wx.EVT_MENU, self.__on_export_scan, self.menuMain.exportScan)
-            self.Bind(wx.EVT_MENU, self.__on_export_image, self.menuMain.exportImage)
-            self.Bind(wx.EVT_MENU, self.__on_export_image_seq, self.menuMain.exportSeq)
-            self.Bind(wx.EVT_MENU, self.__on_export_geo, self.menuMain.exportGeo)
-            self.Bind(wx.EVT_MENU, self.__on_export_track, self.menuMain.exportTrack)
-            self.Bind(wx.EVT_MENU, self.__on_page, self.menuMain.page)
-            self.Bind(wx.EVT_MENU, self.__on_preview, self.menuMain.preview)
-            self.Bind(wx.EVT_MENU, self.__on_print, self.menuMain.printer)
-            self.Bind(wx.EVT_MENU, self.__on_properties, self.menuMain.properties)
-            self.Bind(wx.EVT_MENU, self.__on_pref, self.menuMain.pref)
-            self.Bind(wx.EVT_MENU, self.__on_adv_pref, self.menuMain.advPref)
-            self.Bind(wx.EVT_MENU, self.__on_formatting, self.menuMain.formatting)
-            self.Bind(wx.EVT_MENU, self.__on_devices_rtl, self.menuMain.devicesRtl)
-            self.Bind(wx.EVT_MENU, self.__on_devices_gps, self.menuMain.devicesGps)
-            self.Bind(wx.EVT_MENU, self.__on_reset, self.menuMain.reset)
-            self.Bind(wx.EVT_MENU, self.__on_clear_select, self.menuMain.clearSelect)
-            self.Bind(wx.EVT_MENU, self.__on_show_measure, self.menuMain.showMeasure)
-            self.Bind(wx.EVT_MENU, self.__on_fullscreen, self.menuMain.fullScreen)
-            self.Bind(wx.EVT_MENU, self.__on_start, self.menuMain.start)
-            self.Bind(wx.EVT_MENU, self.__on_continue, self.menuMain.cont)
-            self.Bind(wx.EVT_MENU, self.__on_stop, self.menuMain.stop)
-            self.Bind(wx.EVT_MENU, self.__on_stop_end, self.menuMain.stopEnd)
-            self.Bind(wx.EVT_MENU, self.__on_new, self.menuMain.sweepClear)
-            self.Bind(wx.EVT_MENU, self.__on_sweep_remain, self.menuMain.sweepRemain)
-            self.Bind(wx.EVT_MENU, self.__on_scan_delay, self.menuMain.sweepDelay)
-            self.Bind(wx.EVT_MENU, self.__on_compare, self.menuMain.compare)
-            self.Bind(wx.EVT_MENU, self.__on_smooth, self.menuMain.smooth)
-            self.Bind(wx.EVT_MENU, self.__on_cal, self.menuMain.cal)
-            self.Bind(wx.EVT_MENU, self.__on_gearth, self.menuMain.gearth)
-            self.Bind(wx.EVT_MENU, self.__on_gmaps, self.menuMain.gmaps)
-            self.Bind(wx.EVT_MENU, self.__on_sats, self.menuMain.sats)
-            self.Bind(wx.EVT_MENU, self.__on_loc_clear, self.menuMain.locClear)
-            self.Bind(wx.EVT_MENU, self.__on_log, self.menuMain.log)
-            self.Bind(wx.EVT_MENU, self.__on_help, self.menuMain.helpLink)
-            self.Bind(wx.EVT_MENU, self.__on_sys_info, self.menuMain.sys)
-
-        master_pass_id = wx.NewId()
-        self.Bind(wx.EVT_MENU, self.on_master_password, id=master_pass_id)
+        self.Bind(wx.EVT_MENU, self.__on_pref, self.menuMain.pref)
+        self.Bind(wx.EVT_MENU, self.__on_adv_pref, self.menuMain.advPref)
+        self.Bind(wx.EVT_MENU, self.__on_formatting, self.menuMain.formatting)
+        self.Bind(wx.EVT_MENU, self.__on_devices_rtl, self.menuMain.devicesRtl)
+        self.Bind(wx.EVT_MENU, self.__on_devices_gps, self.menuMain.devicesGps)
+        self.Bind(wx.EVT_MENU, self.__on_reset, self.menuMain.reset)
+        self.Bind(wx.EVT_MENU, self.__on_clear_select, self.menuMain.clearSelect)
+        self.Bind(wx.EVT_MENU, self.__on_show_measure, self.menuMain.showMeasure)
+        self.Bind(wx.EVT_MENU, self.__on_fullscreen, self.menuMain.fullScreen)
+        self.Bind(wx.EVT_MENU, self.__on_start, self.menuMain.start)
+        self.Bind(wx.EVT_MENU, self.__on_continue, self.menuMain.cont)
+        self.Bind(wx.EVT_MENU, self.__on_stop, self.menuMain.stop)
+        self.Bind(wx.EVT_MENU, self.__on_stop_end, self.menuMain.stopEnd)
+        self.Bind(wx.EVT_MENU, self.__on_new, self.menuMain.sweepClear)
+        self.Bind(wx.EVT_MENU, self.__on_sweep_remain, self.menuMain.sweepRemain)
+        self.Bind(wx.EVT_MENU, self.__on_scan_delay, self.menuMain.sweepDelay)
+        self.Bind(wx.EVT_MENU, self.__on_compare, self.menuMain.compare)
+        self.Bind(wx.EVT_MENU, self.__on_smooth, self.menuMain.smooth)
+        self.Bind(wx.EVT_MENU, self.__on_cal, self.menuMain.cal)
+        self.Bind(wx.EVT_MENU, self.__on_gearth, self.menuMain.gearth)
+        self.Bind(wx.EVT_MENU, self.__on_gmaps, self.menuMain.gmaps)
+        self.Bind(wx.EVT_MENU, self.__on_sats, self.menuMain.sats)
+        self.Bind(wx.EVT_MENU, self.__on_loc_clear, self.menuMain.locClear)
+        self.Bind(wx.EVT_MENU, self.__on_log, self.menuMain.log)
+        self.Bind(wx.EVT_MENU, self.__on_help, self.menuMain.helpLink)
+        self.Bind(wx.EVT_MENU, self.__on_sys_info, self.menuMain.sys)
+        self.Bind(wx.EVT_MENU, self.__on_about, self.menuMain.about)
 
         idF1 = wx.wx.NewId()
         self.Bind(wx.EVT_MENU, self.__on_help, id=idF1)
-        accelTable = wx.AcceleratorTable([(wx.ACCEL_SHIFT | wx.ACCEL_ALT, ord('m'), master_pass_id),(wx.ACCEL_NORMAL, wx.WXK_F1, idF1)])
+        accelTable = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_F1, idF1)])
         self.SetAcceleratorTable(accelTable)
 
         self.Bind(wx.EVT_MENU_HIGHLIGHT, self.__on_menu_highlight)
@@ -428,7 +418,7 @@ class FrameMain(wx.Frame):
         self.locations.clear()
         self.__saved(True)
         self.__set_plot(self.spectrum, False)
-        if self.is_admin:self.graph.clear_selection()
+        self.graph.clear_selection()
         self.__set_control_state(True)
         return False
 
@@ -468,7 +458,7 @@ class FrameMain(wx.Frame):
             self.spectrum.update(OrderedDict(sorted(spectrum.items())))
             self.locations.update(OrderedDict(sorted(locations.items())))
             self.__set_plot(self.spectrum, self.settings.annotate)
-            if self.is_admin:self.graph.scale_plot(True)
+            self.graph.scale_plot(True)
             self.status.set_general("Finished")
 
     def __on_file_history(self, event):
@@ -535,7 +525,7 @@ class FrameMain(wx.Frame):
                                      File.Types.IMAGE)
             fullName = os.path.join(dirName, fileName)
             exportType = dlgFile.GetFilterIndex()
-            if self.is_admin:export_image(fullName, exportType,
+            export_image(fullName, exportType,
                          self.graph.get_figure(),
                          self.settings)
             self.status.set_general("Finished")
@@ -623,22 +613,20 @@ class FrameMain(wx.Frame):
         dlg.Destroy()
 
     def __on_preview(self, _event):
-        if self.is_admin:
-            printout = PrintOut(self.graph, self.filename, self.pageConfig)
-            printoutPrinting = PrintOut(self.graph, self.filename, self.pageConfig)
-            preview = wx.PrintPreview(printout, printoutPrinting, self.printConfig)
-            frame = wx.PreviewFrame(preview, self, 'Print Preview')
-            frame.Initialize()
-            frame.SetSize(self.GetSize())
-            frame.Show(True)
+        printout = PrintOut(self.graph, self.filename, self.pageConfig)
+        printoutPrinting = PrintOut(self.graph, self.filename, self.pageConfig)
+        preview = wx.PrintPreview(printout, printoutPrinting, self.printConfig)
+        frame = wx.PreviewFrame(preview, self, 'Print Preview')
+        frame.Initialize()
+        frame.SetSize(self.GetSize())
+        frame.Show(True)
 
     def __on_print(self, _event):
-        if self.is_admin:
-            printer = wx.Printer(self.printConfig)
-            printout = PrintOut(self.graph, self.filename, self.pageConfig)
-            if printer.Print(self, printout, True):
-                self.printConfig = wx.PrintDialogData(printer.GetPrintDialogData())
-                self.pageConfig.SetPrintData(self.printConfig.GetPrintData())
+        printer = wx.Printer(self.printConfig)
+        printout = PrintOut(self.graph, self.filename, self.pageConfig)
+        if printer.Print(self, printout, True):
+            self.printConfig = wx.PrintDialogData(printer.GetPrintDialogData())
+            self.pageConfig.SetPrintData(self.printConfig.GetPrintData())
 
     def __on_properties(self, _event):
         if len(self.spectrum) > 0:
@@ -661,7 +649,7 @@ class FrameMain(wx.Frame):
         self.__get_controls()
         self.settings.devicesRtl = self.devicesRtl
         self.settings.save()
-        if self.is_admin:self.graph.close()
+        self.graph.close()
         self.Destroy()
 
     def __on_pref(self, _event):
@@ -717,7 +705,7 @@ class FrameMain(wx.Frame):
             self.devicesRtl = []
             self.settings.reset()
             self.__set_controls()
-            if self.is_admin:self.graph.create_plot()
+            self.graph.create_plot()
         dlg.Destroy()
 
     def __on_compare(self, _event):
@@ -734,23 +722,22 @@ class FrameMain(wx.Frame):
                 spectrum = dlg.get_spectrum()
                 self.spectrum.update(spectrum.items())
                 self.__set_plot(self.spectrum, False)
-                if self.is_admin:
-                    self.graph.update_measure()
-                    self.graph.redraw_plot()
+                self.graph.update_measure()
+                self.graph.redraw_plot()
                 self.filename += ' - smoothed'
                 self.__saved(False)
             else:
                 self.__saved(saved)
 
     def __on_clear_select(self, _event):
-        if self.is_admin:self.graph.clear_selection()
+        self.graph.clear_selection()
 
     def __on_show_measure(self, event):
         show = event.Checked()
         self.menuMain.showMeasure.Check(show)
         self.menuPopup.showMeasure.Check(show)
         self.settings.showMeasure = show
-        if self.is_admin:self.graph.show_measure_table(show)
+        self.graph.show_measure_table(show)
         self.Layout()
 
     def __on_fullscreen(self, _event):
@@ -762,9 +749,8 @@ class FrameMain(wx.Frame):
         self._mgr.GetPane(self.toolbar1).Show(not full)
         self._mgr.GetPane(self.toolbar2).Show(not full)
         self._mgr.Update()
-        if self.is_admin:
-            self.graph.hide_toolbar(full)
-            self.graph.show_measure_table(not full)
+        self.graph.hide_toolbar(full)
+        self.graph.show_measure_table(not full)
         self.ShowFullScreen(full)
         self.Layout()
 
@@ -813,6 +799,10 @@ class FrameMain(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
+    def __on_about(self, _event):
+        dlg = DialogAbout(self)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def __on_spin(self, event):
         control = event.GetEventObject()
@@ -822,7 +812,7 @@ class FrameMain(wx.Frame):
 
     def __on_choice(self, _event):
         self.__get_controls()
-        if self.is_admin:self.graph.create_plot()
+        self.graph.create_plot()
 
     def __on_start(self, event):
         self.__get_controls()
@@ -880,14 +870,13 @@ class FrameMain(wx.Frame):
         dlg.Destroy()
 
     def __on_range_lim(self, _event):
-        if self.is_admin:
-            xmin, xmax = self.graph.get_axes().get_xlim()
-            xmin = int(xmin)
-            xmax = math.ceil(xmax)
-            if xmax < xmin + 1:
-                xmax = xmin + 1
-            self.settings.start = xmin
-            self.settings.stop = xmax
+        xmin, xmax = self.graph.get_axes().get_xlim()
+        xmin = int(xmin)
+        xmax = math.ceil(xmax)
+        if xmax < xmin + 1:
+            xmax = xmin + 1
+        self.settings.start = xmin
+        self.settings.stop = xmax
         self.__set_controls()
 
     def __on_points_lim(self, _event):
@@ -974,7 +963,7 @@ class FrameMain(wx.Frame):
                                 self.settings.mode == Mode.CONTIN)
             self.__progress()
         elif status == Event.DRAW:
-            if self.is_admin:self.graph.draw()
+            self.graph.draw()
         elif status == Event.DELAY_COUNT:
             self.status.set_general('Delaying sweep', Log.INFO)
             progress = (float(arg1 - arg2) / arg1) * 100.
@@ -1060,7 +1049,7 @@ class FrameMain(wx.Frame):
             if self.isNewScan:
                 self.spectrum.clear()
                 self.locations.clear()
-                if self.is_admin:self.graph.clear_plots()
+                self.graph.clear_plots()
 
                 self.isNewScan = False
                 self.status.set_info('', level=None)
@@ -1075,7 +1064,7 @@ class FrameMain(wx.Frame):
                                          self.settings.indexRtl, samples, isCal)
             self.filename = "Scan {0:.1f}-{1:.1f}MHz".format(self.settings.start,
                                                              self.settings.stop)
-            if self.is_admin:self.graph.set_plot_title()
+            self.graph.set_plot_title()
 
             self.__start_gps()
 
@@ -1224,17 +1213,16 @@ class FrameMain(wx.Frame):
         self.SetTitle(title)
 
     def __set_plot(self, spectrum, annotate):
-        if self.is_admin:
-            if len(spectrum) > 0:
-                total = count_points(spectrum)
-                if total > 0:
-                    extent = Extent(spectrum)
-                    self.graph.set_plot(spectrum,
-                                        self.settings.pointsLimit,
-                                        self.settings.pointsMax,
-                                        extent, annotate)
-            else:
-                self.graph.clear_plots()
+        if len(spectrum) > 0:
+            total = count_points(spectrum)
+            if total > 0:
+                extent = Extent(spectrum)
+                self.graph.set_plot(spectrum,
+                                    self.settings.pointsLimit,
+                                    self.settings.pointsMax,
+                                    extent, annotate)
+        else:
+            self.graph.clear_plots()
 
     def __set_size(self):
         width, height = wx.DisplaySize()
@@ -1247,57 +1235,39 @@ class FrameMain(wx.Frame):
                        art.GetMetric(aui.AUI_DOCKART_PANE_BORDER_SIZE))
 
         toolSize1 = self.toolbar1.GetMinSize()
-        if self.is_admin:
-            toolSize2 = self.toolbar2.GetMinSize()
+        toolSize2 = self.toolbar2.GetMinSize()
 
         paneTool1 = self._mgr.GetPane(self.toolbar1)
-        if self.is_admin:
-            paneTool2 = self._mgr.GetPane(self.toolbar2)
-            if width >= (toolSize1[0] + toolSize2[0] +
+        paneTool2 = self._mgr.GetPane(self.toolbar2)
+        if width >= (toolSize1[0] + toolSize2[0] +
                      (widthBorder * 2) +
                      (widthFrame * 2)):
-                paneTool1.ToolbarPane()
-                paneTool2.ToolbarPane()
-                paneTool2.Layer(1)
-        else:
-            if width >= (toolSize1[0] +
-                     (widthBorder * 2) +
-                     (widthFrame * 2)):
-                paneTool1.ToolbarPane()
+            paneTool1.ToolbarPane()
+            paneTool2.ToolbarPane()
+            paneTool2.Layer(1)
         self._mgr.Update()
-        if self.is_admin:
-            minWidth = max(toolSize1[0], toolSize2[0]) + widthBorder
-        else:
-            minWidth = toolSize1[0] + widthBorder
+
+        minWidth = max(toolSize1[0], toolSize2[0]) + widthBorder
         minWidth = max(minWidth, 640)
         minHeight = 400
-        if not self.is_admin:
-            minHeight=100
-            try:
-                self.SetMinClientSize((minWidth, minHeight))
-            except AttributeError:
-                self.SetMinSize((minWidth ,
-                                 minHeight))
-            self.SetSize((minWidth,minHeight))
-        else:
-            try:
-                self.SetMinClientSize((minWidth, minHeight))
-            except AttributeError:
-                self.SetMinSize((minWidth + (widthFrame * 2),
-                                 minHeight + (widthFrame * 2)))
-            self.SetSize((max(minWidth + (widthFrame * 2), width / 1.5),
-                          max(minHeight + (widthFrame * 2), height / 1.5)))
+
+        try:
+            self.SetMinClientSize((minWidth, minHeight))
+        except AttributeError:
+            self.SetMinSize((minWidth + (widthFrame * 2),
+                             minHeight + (widthFrame * 2)))
+        self.SetSize((max(minWidth + (widthFrame * 2), width / 1.5),
+                      max(minHeight + (widthFrame * 2), height / 1.5)))
 
     def __set_control_state(self, state):
         hasDevices = len(self.devicesRtl) > 0
 
         self.spinCtrlStart.Enable(state)
         self.spinCtrlStop.Enable(state)
-        if self.is_admin:
-            self.controlGain.Enable(state)
-            self.choiceMode.Enable(state)
-            self.choiceDwell.Enable(state)
-            self.choiceNfft.Enable(state)
+        self.controlGain.Enable(state)
+        self.choiceMode.Enable(state)
+        self.choiceDwell.Enable(state)
+        self.choiceNfft.Enable(state)
         self.buttonStart.Enable(state and hasDevices)
         self.buttonStop.Enable(not state and hasDevices)
 
@@ -1307,63 +1277,60 @@ class FrameMain(wx.Frame):
     def __set_controls(self):
         self.spinCtrlStart.SetValue(self.settings.start)
         self.spinCtrlStop.SetValue(self.settings.stop)
-        if self.is_admin:self.choiceMode.SetSelection(MODE[1::2].index(self.settings.mode))
+        self.choiceMode.SetSelection(MODE[1::2].index(self.settings.mode))
         dwell = calc_real_dwell(self.settings.dwell)
         dwells = get_dwells()
         try:
             sel = dwells[1::2].index(dwell)
         except ValueError:
             sel = dwells[1::2][len(dwells) / 4]
-        if self.is_admin:
-            self.choiceDwell.SetSelection(sel)
-            self.choiceNfft.SetSelection(NFFT.index(self.settings.nfft))
-            self.choiceDisplay.SetSelection(DISPLAY[1::2].index(self.settings.display))
+        self.choiceDwell.SetSelection(sel)
+        self.choiceNfft.SetSelection(NFFT.index(self.settings.nfft))
+        self.choiceDisplay.SetSelection(DISPLAY[1::2].index(self.settings.display))
 
     def __set_gain_control(self):
-        if self.is_admin:
-            grid = self.controlGain.GetContainingSizer()
-            if len(self.devicesRtl) > 0:
-                self.controlGain.Destroy()
-                device = self.devicesRtl[self.settings.indexRtl]
-                if device.isDevice:
-                    gains = device.get_gains_str()
-                    self.controlGain = wx.Choice(self.toolbar1,
-                                                 choices=gains)
-                    gain = device.get_closest_gain_str(device.gain)
-                    self.controlGain.SetStringSelection(gain)
-                else:
-                    self.controlGain = NumCtrl(self.toolbar1, integerWidth=3,
-                                               fractionWidth=1)
-                    font = self.controlGain.GetFont()
-                    dc = wx.WindowDC(self.controlGain)
-                    dc.SetFont(font)
-                    size = dc.GetTextExtent('####.#')
-                    self.controlGain.SetMinSize((size[0] * 1.2, -1))
-                    self.controlGain.SetValue(device.gain)
+        grid = self.controlGain.GetContainingSizer()
+        if len(self.devicesRtl) > 0:
+            self.controlGain.Destroy()
+            device = self.devicesRtl[self.settings.indexRtl]
+            if device.isDevice:
+                gains = device.get_gains_str()
+                self.controlGain = wx.Choice(self.toolbar1,
+                                             choices=gains)
+                gain = device.get_closest_gain_str(device.gain)
+                self.controlGain.SetStringSelection(gain)
+            else:
+                self.controlGain = NumCtrl(self.toolbar1, integerWidth=3,
+                                           fractionWidth=1)
+                font = self.controlGain.GetFont()
+                dc = wx.WindowDC(self.controlGain)
+                dc.SetFont(font)
+                size = dc.GetTextExtent('####.#')
+                self.controlGain.SetMinSize((size[0] * 1.2, -1))
+                self.controlGain.SetValue(device.gain)
 
-                grid.Add(self.controlGain, pos=(1, 7), flag=wx.ALIGN_CENTER)
-                grid.Layout()
+            grid.Add(self.controlGain, pos=(1, 7), flag=wx.ALIGN_CENTER)
+            grid.Layout()
 
     def __get_controls(self):
         self.settings.start = self.spinCtrlStart.GetValue()
         self.settings.stop = self.spinCtrlStop.GetValue()
         self.settings.startOption = self.buttonStart.GetSelected()
         self.settings.stopOption = self.buttonStop.GetSelected()
-        if self.is_admin:
-            self.settings.mode = MODE[1::2][self.choiceMode.GetSelection()]
-            self.settings.dwell = get_dwells()[1::2][self.choiceDwell.GetSelection()]
-            self.settings.nfft = NFFT[self.choiceNfft.GetSelection()]
-            self.settings.display = DISPLAY[1::2][self.choiceDisplay.GetSelection()]
+        self.settings.mode = MODE[1::2][self.choiceMode.GetSelection()]
+        self.settings.dwell = get_dwells()[1::2][self.choiceDwell.GetSelection()]
+        self.settings.nfft = NFFT[self.choiceNfft.GetSelection()]
+        self.settings.display = DISPLAY[1::2][self.choiceDisplay.GetSelection()]
 
-            if len(self.devicesRtl) > 0:
-                device = self.devicesRtl[self.settings.indexRtl]
-                try:
-                    if device.isDevice:
-                        device.gain = float(self.controlGain.GetStringSelection())
-                    else:
-                        device.gain = self.controlGain.GetValue()
-                except ValueError:
-                    device.gain = 0
+        if len(self.devicesRtl) > 0:
+            device = self.devicesRtl[self.settings.indexRtl]
+            try:
+                if device.isDevice:
+                    device.gain = float(self.controlGain.GetStringSelection())
+                else:
+                    device.gain = self.controlGain.GetValue()
+            except ValueError:
+                device.gain = 0
 
     def __save_warn(self, warnType):
         if self.settings.saveWarn and not self.isSaved:
@@ -1407,7 +1374,7 @@ class FrameMain(wx.Frame):
             self.spectrum.update(OrderedDict(sorted(spectrum.items())))
             self.locations.update(OrderedDict(sorted(locations.items())))
             self.__set_plot(self.spectrum, self.settings.annotate)
-            if self.is_admin:self.graph.scale_plot(True)
+            self.graph.scale_plot(True)
             self.status.set_general("Finished")
             self.settings.fileHistory.AddFileToHistory(os.path.join(dirname,
                                                                     filename))
@@ -1421,7 +1388,7 @@ class FrameMain(wx.Frame):
             return
 
         self.__on_new(None)
-        if self.is_admin:self.graph.get_canvas().draw()
+        self.graph.get_canvas().draw()
 
         self.filename = os.path.splitext(filename)[0]
         self.settings.dirScans = dirname
@@ -1438,42 +1405,14 @@ class FrameMain(wx.Frame):
             self.__set_controls()
             self.__set_control_state(True)
             self.__set_plot(spectrum, self.settings.annotate)
-            if self.is_admin:
-                self.graph.set_plot_title()
-                self.graph.scale_plot(True)
+            self.graph.set_plot_title()
+            self.graph.scale_plot(True)
             self.status.set_general("Finished")
             self.settings.fileHistory.AddFileToHistory(os.path.join(dirname,
                                                                     filename))
         else:
             self.status.set_general("Open failed", level=Log.ERROR)
 
-    def __on_version_change(self,_event):
-        if not self.is_admin:
-            dialog=password_dialog.PasswordDialog(self,"Please Enter Password","Password")
-            dialog.Center()
-            result=dialog.ShowModal()
-            if result==password_dialog.PASS_OK:
-                self.__on_exit(_event)
-                self.on_version_change(2)
-        else:
-            self.__on_exit(_event)
-            self.on_version_change(1)
-
-    def __on_password_change(self,event):
-        dialog = password_dialog.NewPasswordDialog(self)
-        dialog.Center()
-        result = dialog.ShowModal()
-        if result == password_dialog.PASS_OK:
-            self.__on_exit(event)
-            self.on_version_change(1)
-    def on_master_password(self, event):
-        if not self.is_admin:
-            dialog = password_dialog.MasterPasswordDialog(self, )
-            dialog.Center()
-            result = dialog.ShowModal()
-            if result == password_dialog.PASS_OK:
-                self.__on_exit(event)
-                self.on_version_change(2)
 
 if __name__ == '__main__':
     print 'Please run rtlsdr_scan.py'
