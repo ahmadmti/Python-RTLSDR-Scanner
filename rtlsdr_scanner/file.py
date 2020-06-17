@@ -422,7 +422,8 @@ def export_plot(filename, exportType, spectrum):
     handle.close()
 
 
-def export_cont(handle, filename, spectrum):
+def export_cont(handle, filename, spectrum,loc=None):
+    #todo place to receive last location
     if handle is None and filename is not None:
         handle = open(filename, 'wb')
         export_csv(handle, None)
@@ -465,13 +466,13 @@ def export_map(filename, exportType, bounds, image, xyz):
         export_map_image(filename, exportType, image)
 
 
-def export_csv(handle, spectrum, header=True):
+def export_csv(handle, spectrum, header=True,loc=None):
     if header:
-        handle.write(u"Time (UTC), Frequency (MHz),Level (dB/Hz)\n")
+        handle.write(u"Time (UTC), Frequency (MHz),Level (dB/Hz),lat,long\n")
     if spectrum is not None:
         for plot in spectrum.iteritems():
             for freq, pwr in plot[1].iteritems():
-                handle.write("{}, {}, {}\n".format(plot[0], freq, pwr))
+                handle.write("{}, {}, {},{}\n".format(plot[0], freq, pwr,loc))
 
 
 def export_plt(handle, spectrum):

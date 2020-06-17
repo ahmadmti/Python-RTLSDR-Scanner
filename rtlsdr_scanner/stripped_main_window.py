@@ -1097,8 +1097,9 @@ class FrameMain(wx.Frame):
             self.__set_plot(self.spectrum, self.settings.annotate)
             if self.exportCont is not None:
                 last = next(reversed(self.spectrum))
+                location = str(self.locations[last][0]) + ',' + str(self.locations[last][1])
                 sweep = OrderedDict({last: self.spectrum[last]})
-                export_cont(self.exportCont, None, sweep)
+                export_cont(self.exportCont, None, sweep,loc=location)
 
             if self.stopScan:
                 self.status.set_general("Stopped")
