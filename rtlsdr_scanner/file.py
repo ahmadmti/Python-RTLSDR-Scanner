@@ -428,7 +428,7 @@ def export_cont(handle, filename, spectrum,loc=None):
         handle = open(filename, 'wb')
         export_csv(handle, None)
     else:
-        export_csv(handle, spectrum, False)
+        export_csv(handle, spectrum, False,loc=loc)
 
     return handle
 
@@ -466,7 +466,7 @@ def export_map(filename, exportType, bounds, image, xyz):
         export_map_image(filename, exportType, image)
 
 
-def export_csv(handle, spectrum, header=True,loc=None):
+def export_csv(handle, spectrum, header=True,loc=str([None,None])):
     if header:
         handle.write(u"Time (UTC), Frequency (MHz),Level (dB/Hz),lat,long\n")
     if spectrum is not None:

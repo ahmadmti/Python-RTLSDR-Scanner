@@ -1097,7 +1097,10 @@ class FrameMain(wx.Frame):
             self.__set_plot(self.spectrum, self.settings.annotate)
             if self.exportCont is not None:
                 last = next(reversed(self.spectrum))
-                location = str(self.locations[last][0]) + ',' + str(self.locations[last][1])
+                lastLocation = self.locations.get(last, [None, None])
+                print "got location {}".format(lastLocation)
+                location = str(lastLocation[0]) + ',' + str(lastLocation[1])
+                print "saving location {}".format(location)
                 sweep = OrderedDict({last: self.spectrum[last]})
                 export_cont(self.exportCont, None, sweep,loc=location)
 
