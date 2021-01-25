@@ -192,7 +192,7 @@ class ThreadPlot(threading.Thread):
 
             self.__clear_markers()
 
-            if self.annotate:
+            if self.annotate and  self.settings.plotFunc:
                 self.__plot_peak(peakF, peakL, peakT)
 
             if self.settings.peaks:

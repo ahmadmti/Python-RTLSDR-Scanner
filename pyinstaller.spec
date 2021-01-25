@@ -67,7 +67,7 @@ def create_version():
 
 def build(version=None):
     architecture, _null = platform.architecture()
-    filename = 'SHARPMAP-' + system + '-' + architecture.lower()+"_debug_version"
+    filename = 'SHARPMAP-' + system + '-' + architecture.lower()+"debug"
 
     excludes = ['PySide', 'qt', 'scipy']
     a = Analysis(['rtlsdr_scanner/__main__.py'],
@@ -89,7 +89,8 @@ def build(version=None):
               name=os.path.join('dist', filename),
               icon='icon.ico',
               version=version,
-              upx=False)
+              upx=True,
+              console=False)
 
     os.remove('icon.ico')
 

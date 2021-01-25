@@ -319,7 +319,7 @@ class ThreadPlot(threading.Thread):
             elif self.settings.plotFunc == PlotFunc.DIFF:
                 peakF, peakL, peakT = self.__plot_diff()
 
-            if self.annotate:
+            if self.annotate and self.settings.plotFunc:
                 self.__plot_peak(peakF, peakL, peakT)
 
             if self.settings.peaks:
