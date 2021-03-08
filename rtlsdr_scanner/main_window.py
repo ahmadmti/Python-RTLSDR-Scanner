@@ -57,6 +57,7 @@ from rtlsdr_scanner.dialogs_tools import DialogCompare, DialogAutoCal, DialogSat
 from rtlsdr_scanner.events import EVENT_THREAD, Event, Log, EventTimer
 from rtlsdr_scanner.file import save_plot, export_plot, export_cont, open_plot, ScanInfo, export_image, \
     export_map, extension_add, File, run_file, export_gpx, Backups
+from rtlsdr_scanner.last_spectrum import LastSpectrumValueDialog, LastSpectrumValuePasswordDialog
 from rtlsdr_scanner.panels import PanelGraph
 from rtlsdr_scanner.printer import PrintOut
 from rtlsdr_scanner.scan import ThreadScan, update_spectrum, ThreadProcess
@@ -68,6 +69,7 @@ from rtlsdr_scanner.utils_mpl import add_colours
 from rtlsdr_scanner.utils_wx import load_icon
 from rtlsdr_scanner.widgets import MultiButton
 
+allow_last_scan=False
 
 class DropTarget(wx.FileDropTarget):
     def __init__(self, window):
@@ -332,6 +334,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.__on_save, self.menuMain.save)
         self.Bind(wx.EVT_MENU, self.__on_exit, self.menuMain.close)
         self.Bind(wx.EVT_MENU, self.__on_version_change, self.menuMain.versionSwitch)
+        self.Bind(wx.EVT_MENU, self.__on_df_mode, self.menuMain.dfMode)
 
 
         if self.is_admin:
@@ -1462,6 +1465,28 @@ class FrameMain(wx.Frame):
         else:
             self.__on_exit(_event)
             self.on_version_change(1)
+
+    def __on_df_mode(self,_event):
+        global allow_last_scan
+        if not allow_last_scan :
+            dialog = LastSpectrumValuePasswordDialog(self, )
+            dialog.Center()
+            result = dialog.ShowModal()
+            if result == password_dialog.PASS_OK:
+                allow_last_scan=True
+        if allow_last_scan:
+            try:
+                _, last_spectrum = next(reversed(self.spectrum.items()))
+                sorted_last_spectrum = sorted(last_spectrum.values())
+                if sorted_last_spectrum:
+                    print(sorted_last_spectrum[-1])
+                    dialog = LastSpectrumValueDialog(self, value=sorted_last_spectrum[-1])
+                    dialog.Center()
+                    result = dialog.ShowModal()
+            except StopIteration as e:
+                pass
+
+
 
     def __on_password_change(self,event):
         dialog = password_dialog.NewPasswordDialog(self)

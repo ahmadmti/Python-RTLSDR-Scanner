@@ -21,12 +21,12 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=D:\work\python\Python-RTLSDR-Scanner\nsis\license.txt
+LicenseFile=D:\work\python\sharpmap\nsis\license.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputDir=D:\work\python\dists
 OutputBaseFilename=SharpMap
-SetupIconFile=D:\work\python\Python-RTLSDR-Scanner\nsis\sharpmap.ico
+SetupIconFile=D:\work\python\sharpmap\nsis\sharpmap.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -39,7 +39,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\work\python\Python-RTLSDR-Scanner\dist\SHARPMAP-windows-32bit.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\work\python\sharpmap\dist\SHARPMAP-windows-32bit.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

@@ -1,0 +1,5 @@
+/dist/
+/build/
+/license_generate.build/
+/license_generate.dist/
+/license_generate.onefile-build/

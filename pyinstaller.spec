@@ -67,7 +67,7 @@ def create_version():
 
 def build(version=None):
     architecture, _null = platform.architecture()
-    filename = 'SHARPMAP-' + system + '-' + architecture.lower()+"debug"
+    filename = 'SHARPMAP-' + system + '-' + architecture.lower()
 
     excludes = ['PySide', 'qt', 'scipy']
     a = Analysis(['rtlsdr_scanner/__main__.py'],

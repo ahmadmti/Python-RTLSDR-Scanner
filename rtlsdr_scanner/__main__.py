@@ -23,6 +23,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# from license.license_verify import LicenseFrame, verify_license
+from rtlsdr_scanner.license_form import LicenseFrame, is_licenced
 
 try:
     input = raw_input
@@ -118,7 +120,10 @@ def __arguments():
 
 
 switch_version = 0
-
+verify=False
+def onVerify():
+    global verify
+    verify=True
 
 def version_switch(i):
     global switch_version
@@ -126,6 +131,13 @@ def version_switch(i):
 
 
 if __name__ == '__main__':
+    # if not is_licenced():
+    #     app = wx.App()
+    #     frame = LicenseFrame(onVerify=onVerify, )
+    #     app.MainLoop()
+    #     del app
+    #     if not verify:
+    #         exit(0)
     print APP_NAME + "\n"
 
     isGui, args = __arguments()

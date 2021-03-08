@@ -64,6 +64,8 @@ class MenuMain(object):
         self.exportCont = file.Append(wx.ID_ANY, "Continuous export...",
                                       'Continually export data at the end of each sweep',
                                       kind=wx.ITEM_CHECK)
+        self.dfMode = file.Append(wx.ID_ANY, "DF mode",
+                                      'Shows the most recent highest radio signal strength',)
 
         if self.is_admin:
             file.AppendSeparator()
