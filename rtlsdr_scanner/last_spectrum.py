@@ -1,20 +1,55 @@
 import wx
+from win32crypt import CryptUnprotectData, CryptProtectData
 
 from rtlsdr_scanner.password_dialog import PASS_OK, PASS_CANCEL, resource_path
 
+def save_mod():
+    data=CryptProtectData("pass")
+    with open("rf.mod", 'wb') as file:
+        file.write(data)
 
-class LastSpectrumValueDialog(wx.Dialog):
-    def __init__(self, parent,value=-48.3399255981):
-        super(LastSpectrumValueDialog, self).__init__(parent, -1, "Last Scan minimum value",)
+def verify_mod(data):
+    try:
+        if data:
+            data = CryptUnprotectData(data)
+            if data[1]=='pass':
+                return True
+            else:
+                return False
+        else:
+            return False
+    except Exception as e:
+        return False
+
+
+def is_allow_df_mod():
+    try:
+        with open("rf.mod", 'rb') as file:
+            data=file.read()
+            return verify_mod(data)
+    except Exception as e:
+        return False
+
+class LastSpectrumValueDialog(wx.Frame):
+    def __init__(self, parent=None,value=-48.3399255981,onClosed=None):
+        wx.Frame.__init__(self,parent, title="Last Scan maximum value",)
         panel = wx.Panel(self)
         panel.SetBackgroundColour((0,0,0))
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        value=round(value,2)
+        horizontal_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        vertical_sizer = wx.BoxSizer(wx.VERTICAL)
+        value = round(value, 2)
         self.label = wx.StaticText(panel, label=str(value))
         font = wx.Font(72, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.label.SetFont(font)
         self.label.SetForegroundColour((255, 255, 255))
-        panel.SetSizer(sizer)
+        horizontal_sizer.Add(self.label, 0, wx.CENTER)
+
+        vertical_sizer.Add((0, 0), 1, wx.EXPAND)
+        vertical_sizer.Add(horizontal_sizer, 0, wx.CENTER)
+        vertical_sizer.Add((0, 0), 1, wx.EXPAND)
+
+        panel.SetSizer(vertical_sizer)
+        self.Bind(wx.EVT_CLOSE, onClosed)
         self.Show()
 
 class LastSpectrumValuePasswordDialog(wx.Dialog):
@@ -44,6 +79,7 @@ class LastSpectrumValuePasswordDialog(wx.Dialog):
         with open(resource_path("res/LastSpectrumValuePasswordDialog.txt")) as file:
             password = file.read().strip()
             if self.input.GetValue() == password:
+                save_mod()
                 self.EndModal(PASS_OK)
             else:
                 self.input.SetBackgroundColour ( "Pink" )

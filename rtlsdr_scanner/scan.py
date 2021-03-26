@@ -229,6 +229,7 @@ def update_spectrum(notify, lock, start, stop, data, offset,
 
         if updated:
             spectrum[timeStamp] = OrderedDict(sorted(spectrum[timeStamp].items()))
+        #todo add model update here
 
     post_event(notify, EventThread(Event.UPDATED, None, updated))
 

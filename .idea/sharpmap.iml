@@ -4,6 +4,11 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/__main__.build" />
       <excludeFolder url="file://$MODULE_DIR$/__main__.dist" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/license_generate.build" />
+      <excludeFolder url="file://$MODULE_DIR$/license_generate.dist" />
+      <excludeFolder url="file://$MODULE_DIR$/license_generate.onefile-build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

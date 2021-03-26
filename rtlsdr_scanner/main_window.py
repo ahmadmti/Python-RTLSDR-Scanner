@@ -57,7 +57,7 @@ from rtlsdr_scanner.dialogs_tools import DialogCompare, DialogAutoCal, DialogSat
 from rtlsdr_scanner.events import EVENT_THREAD, Event, Log, EventTimer
 from rtlsdr_scanner.file import save_plot, export_plot, export_cont, open_plot, ScanInfo, export_image, \
     export_map, extension_add, File, run_file, export_gpx, Backups
-from rtlsdr_scanner.last_spectrum import LastSpectrumValueDialog, LastSpectrumValuePasswordDialog
+from rtlsdr_scanner.last_spectrum import LastSpectrumValueDialog, LastSpectrumValuePasswordDialog, is_allow_df_mod
 from rtlsdr_scanner.panels import PanelGraph
 from rtlsdr_scanner.printer import PrintOut
 from rtlsdr_scanner.scan import ThreadScan, update_spectrum, ThreadProcess
@@ -107,7 +107,7 @@ class FrameMain(wx.Frame):
         self.queueScan = Queue.Queue()
 
         self.serverLocation = None
-
+        self.isDfOpen=False
         self.isNewScan = True
         self.isScanning = False
 
@@ -975,6 +975,13 @@ class FrameMain(wx.Frame):
                                 self.settings.annotate and
                                 self.settings.retainScans and
                                 self.settings.mode == Mode.CONTIN)
+            #todo change it to live update
+            if self.isDfOpen:
+                if self.spectrum:
+                    _, last_spectrum = next(reversed(self.spectrum.items()))
+                    sorted_last_spectrum = sorted(last_spectrum.values())
+                    if sorted_last_spectrum:
+                        self.dialog.label.SetLabel(str(sorted_last_spectrum[-1]))
             self.__progress()
         elif status == Event.DRAW:
             if self.is_admin:self.graph.draw()
@@ -1468,25 +1475,29 @@ class FrameMain(wx.Frame):
 
     def __on_df_mode(self,_event):
         global allow_last_scan
-        if not allow_last_scan :
+        if not is_allow_df_mod() :
             dialog = LastSpectrumValuePasswordDialog(self, )
             dialog.Center()
             result = dialog.ShowModal()
             if result == password_dialog.PASS_OK:
                 allow_last_scan=True
-        if allow_last_scan:
+        if is_allow_df_mod() :
             try:
                 _, last_spectrum = next(reversed(self.spectrum.items()))
                 sorted_last_spectrum = sorted(last_spectrum.values())
                 if sorted_last_spectrum:
                     print(sorted_last_spectrum[-1])
-                    dialog = LastSpectrumValueDialog(self, value=sorted_last_spectrum[-1])
-                    dialog.Center()
-                    result = dialog.ShowModal()
+                    self.dialog = LastSpectrumValueDialog(self, value=sorted_last_spectrum[-1],onClosed=self._on_df_closed)
+                    self.dialog.Center()
+                    self.isDfOpen=True
+                    # result = dialog.ShowModal()
             except StopIteration as e:
                 pass
 
-
+    def _on_df_closed(self,event):
+        # self.dialog.label.SetLabel("hi")
+        self.dialog.Destroy()
+        self.isDfOpen=False
 
     def __on_password_change(self,event):
         dialog = password_dialog.NewPasswordDialog(self)
