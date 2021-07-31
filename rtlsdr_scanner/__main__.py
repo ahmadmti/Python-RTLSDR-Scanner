@@ -24,7 +24,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # from license.license_verify import LicenseFrame, verify_license
-from rtlsdr_scanner.license_form import LicenseFrame, is_licenced
+# from rtlsdr_scanner.license_form import LicenseFrame, is_licenced
 
 try:
     input = raw_input
